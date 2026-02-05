@@ -33,5 +33,7 @@ Le projet est organisé en plusieurs sections logiques :
     - `#victoire` (pour le message final)
 3. Ouvre le fichier `index.html` dans ton navigateur.
 
+Aussi online ici : https://www.devpassion.be/pokepair/
+
 ---
 *Projet réalisé avec passion et un peu de combat contre les parenthèses.*
