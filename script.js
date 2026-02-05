@@ -1,3 +1,4 @@
+//#region Variables Globales
 let CarteRetourne = []
 let bloquage = false;
 let tentatives = 0;
@@ -5,8 +6,13 @@ let seconde = 0;
 let interval;
 let jeuLance = false;
 let victoire = document.getElementById("victoire");
+let totalPokemon = 0
+//#endregion
 
-//ajout du timer
+//#region Fonctions de Temps
+/**
+ * Lance le chronomètre au premier clic si le jeu n'est pas déjà lancé.
+ */
 function demarrerTimer(){
  if (jeuLance) return;
  jeuLance = true;
@@ -16,30 +22,55 @@ function demarrerTimer(){
  }, 1000);
 }
 
+/**
+ * Vérifie si la condition de victoire est remplie pour stopper le timer.
+ */
 function arreterTimer(){
  const cartesTrouvees = document.querySelectorAll(".estRetourne").length; // queryselector ne fonctionne pas ici, il faut all
- if (cartesTrouvees === 4) {
+ if (cartesTrouvees === 16) {
   clearInterval(interval);
   victoire.textContent = `Bravo ! Tu as gagné en ${seconde} s et ${tentatives} tentatives! Tente un nouveau record !`;
   const recommencer = document.createElement("button");
   recommencer.classList.add("recommencer");
   recommencer.textContent = "Recommencer";
   victoire.appendChild(recommencer);
+  recommencer.addEventListener("click", () => {location.reload();});
  }
 }
+//#endregion
 
+//#region Préparation et API
+/**
+ * Récupère le nombre total de Pokémon via l'API.
+ */
+async function majNombre() {
+ const response = await fetch('https://pokeapi.co/api/v2/pokemon-species/');
+ const data = await response.json();
+
+ totalPokemon = data.count;
+ console.log(`${totalPokemon}`);
+}
+
+/**
+ * Gère la sélection aléatoire, l'appel API et le mélange des cartes.
+ * @returns {Promise<Array>} Le tableau de cartes prêt pour l'affichage.
+ */
 async function preparationJeu() {
  try {
-  //preparation, selection de carte
-  const randomCalcul = Math.floor(Math.random() * 100);
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=2&offset=${randomCalcul}`);
-  const donnees = await response.json();
-
-  /*recup des images()*/
-  // tableau de donnees (donees.results) => vers un autre tableau de promesse
-  const promesse = donnees.results.map(p => fetch(p.url).then(response => response.json())) //<-- transformer la response en Json
-  console.log(promesse);
-  const pokemons = await Promise.all(promesse); // <- j'attends que toutes les promesses ok et lance tous les appels en parallele
+  //compter les id dans la db
+  await majNombre()
+  //preparation des cartes (nouveau)
+  const superAleatoire = [];
+  //boucle, tant que pas 8 continuer si je veux plus ou moins de cartes c'est ici et plus dans l'url du fetch
+  while (superAleatoire.length < 8) {
+   let id = Math.floor(Math.random() * totalPokemon + 1); //+1 car sinon avec floor on perd une position.
+   if(!superAleatoire.includes(id)) {
+    superAleatoire.push(id); // verifier que ça n'existe pas deja et ajouter
+   }
+  }
+  const promesses = superAleatoire.map(id => fetch (`https://pokeapi.co/api/v2/pokemon/${id}`) //id ici pour 8 appelles en même temps en quelque sorte
+    .then(res => res.json()));
+  const pokemons = await Promise.all(promesses); //comme pour l'autre version
 
   //"DTO"
   const CartesBase = pokemons.map(p => ({
@@ -58,14 +89,20 @@ async function preparationJeu() {
    [cartesJeu[i], cartesJeu[j]] = [cartesJeu[j], cartesJeu[i]];
   }
 
-   //console.log(cartesJeu);
+  //console.log(cartesJeu);
 
-   return cartesJeu;
+  return cartesJeu;
  } catch (error) {
   console.log("erreur de création du jeu :", error)
  }
 }
-//dom blablabla
+//#endregion
+
+//#region Affichage
+/**
+ * Crée les éléments HTML pour chaque carte et les injecte dans le plateau.
+ * @param {Array} cartes - Liste des Pokémon mélangés.
+ */
 function AfficherCartes(cartes) {
  const plateau = document.querySelector("#plateau");
  plateau.textContent = "";
@@ -87,7 +124,12 @@ function AfficherCartes(cartes) {
   carte.addEventListener("click", retourner); //<- lui il m'a fait chier, attention, pas en dehors.......
  });
 }
+//#endregion
 
+//#region Logique du Jeu
+/**
+ * Gère l'événement de clic pour retourner une carte.
+ */
 function retourner() {
  if (bloquage) return;
  if (this === CarteRetourne[0]) return; //this = qui vient d'etre cliquee dans ce cas. MDN
@@ -105,6 +147,9 @@ function retourner() {
  }
 }
 
+/**
+ * Vérifie si les deux cartes retournées ont le même dataset.name.
+ */
 function verifPaire() {
  let estPareil = CarteRetourne[0].dataset.name === CarteRetourne[1].dataset.name // je verifie si la carte dans [0] est pareil que [1] retourne true.
 
@@ -113,6 +158,9 @@ function verifPaire() {
  estPareil ? desactiverCartes() : cacherCartes();
 }
 
+/**
+ * Maintient les cartes visibles et retire l'écouteur de clic.
+ */
 function desactiverCartes() {
  CarteRetourne[0].removeEventListener("click", retourner);
  CarteRetourne[1].removeEventListener("click", retourner);
@@ -121,6 +169,9 @@ function desactiverCartes() {
  arreterTimer();
 }
 
+/**
+ * Retourne les cartes face cachée après un délai si elles ne sont pas identiques.
+ */
 function cacherCartes() {
  bloquage = true;
 
@@ -132,16 +183,13 @@ function cacherCartes() {
   bloquage = false;
  }, 1000); // 1.5 seconde t'attente
 }
+//#endregion
+
+//#region Execution
 // je prends le return "en attente"(promesse) de preparationJeu et la fonction pour afficher les cartes et magiiiie :) trop bien.
 preparationJeu().then(cartesJeu => {
  if (cartesJeu) {
   AfficherCartes(cartesJeu);
  }
 })
-
-
-
-
-
-
-
+//#endregion

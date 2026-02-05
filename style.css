@@ -55,11 +55,11 @@ h1 {
     justify-content: center;
     align-items: center;
     transition: transform 0.2s;
-    box-shadow: 0px 8px 15px rgba(0,0,0,0.5);
+    box-shadow: 10px 8px 15px black
 }
 
 .carte:hover {
-    transform: scale(1.05) translateY(-5px);
+    transform: scale(1.05)
 }
 
 .pokImg {
@@ -72,12 +72,12 @@ h1 {
 .carte.estRetourne {
     background-color: rgba(255, 255, 255, 0.95);
     cursor: default;
-    transform: rotateY(180deg);
+    transform: rotateY(360deg);
 }
 
 .carte.estRetourne .pokImg {
     display: block;
-}
+} /*merci internet sinon carte blanche*/
 
 footer {
     padding: 15px;
@@ -107,11 +107,13 @@ footer {
     font-family: 'PokemonFont', sans-serif;
     color: #FFCB05;
     font-size: 40px;
-    text-shadow: 3px 3px 0px #3c5aa6;
+    text-shadow: 3px 3px #3c5aa6;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    text-align: center;
+
 }
 
 .recommencer {
