@@ -47,7 +47,7 @@ async function majNombre() {
  const response = await fetch('https://pokeapi.co/api/v2/pokemon-species/');
  const data = await response.json();
 
- totalPokemon = data.count;
+ totalPokemon = 1025;
  console.log(`${totalPokemon}`);
 }
 
